@@ -14,6 +14,7 @@ import { ButtonLink } from '@/components/ui/button-link'
 import { getAnnouncements, getTeam } from '@/lib/api'
 import { getCurrentUser } from '@/lib/supabase/auth'
 import { EVENT } from '@/lib/config'
+import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
   title: `Team Dashboard — ${EVENT.name}`,
@@ -58,6 +59,13 @@ export default async function TeamDashboardPage() {
   // see getTeam() in lib/api.ts). Users still get the mock-data preview when
   // Supabase isn't connected at all (getCurrentUser() returns null then).
   const user = await getCurrentUser()
+
+  // Admins/judges shouldn't land here — even by a stale link or bookmark.
+  // Send them to their real dashboard instead of showing team setup.
+  if (user && user.role !== 'team') {
+    redirect(user.role === 'admin' ? '/dashboard/admin' : '/dashboard/judge')
+  }
+
   const needsTeamSetup = user !== null && user.teamId === null
 
   const [team, announcements] = await Promise.all([
