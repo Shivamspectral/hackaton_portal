@@ -1,0 +1,144 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-space-grotesk), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+}
+
+:root {
+  color-scheme: dark;
+
+  /* Ink-black with a faint warm-green temperature — a build-log substrate,
+     deliberately not pure #000 and not a neutral charcoal. */
+  --background: oklch(0.17 0.012 152);
+  --foreground: oklch(0.95 0.01 95);
+
+  --card: oklch(0.205 0.012 152);
+  --card-foreground: oklch(0.95 0.01 95);
+  --popover: oklch(0.195 0.012 152);
+  --popover-foreground: oklch(0.95 0.01 95);
+
+  /* Phosphor / circuit-trace green — the primary accent (CTAs, active nav,
+     links, countdown digits, "open" states). A considered pine-green, not
+     a generic saturated neon. */
+  --primary: oklch(0.74 0.15 150);
+  --primary-foreground: oklch(0.16 0.02 152);
+
+  --secondary: oklch(0.26 0.012 152);
+  --secondary-foreground: oklch(0.95 0.01 95);
+
+  --muted: oklch(0.235 0.012 152);
+  --muted-foreground: oklch(0.7 0.015 135);
+
+  /* Electric violet — a considered cool accent for "heating up" signals
+     (filling-fast, advanced). Complements the phosphor green without
+     fighting it, and brings a bit of purple into the build-log. */
+  --accent: oklch(0.66 0.19 300);
+  --accent-foreground: oklch(0.16 0.02 300);
+
+  /* Oxide / warning red — a genuine second signal, nudged a touch brighter,
+     used for closed/urgent/live states and the leaderboard leader. */
+  --destructive: oklch(0.61 0.22 26);
+
+  --border: oklch(0.95 0 0 / 10%);
+  --input: oklch(0.95 0 0 / 13%);
+  --ring: oklch(0.74 0.15 150);
+
+  --chart-1: oklch(0.74 0.15 150);
+  --chart-2: oklch(0.61 0.22 26);
+  --chart-3: oklch(0.7 0.14 152);
+  --chart-4: oklch(0.66 0.19 300);
+  --chart-5: oklch(0.52 0.21 26);
+
+  --radius: 0.75rem;
+}
+
+.dark {
+  color-scheme: dark;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+}
+
+@layer utilities {
+  /* Subtle technical grid background — hairline, no glow */
+  .bg-grid {
+    background-image:
+      linear-gradient(to right, oklch(0.95 0 0 / 4%) 1px, transparent 1px),
+      linear-gradient(to bottom, oklch(0.95 0 0 / 4%) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .bg-grid-fade {
+    -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+    mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 40%, transparent 100%);
+  }
+
+  /* Fine noise texture overlay */
+  .bg-noise {
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  }
+
+  /* Restrained emphasis: a hairline ring, not a neon halo. */
+  .glow-primary {
+    box-shadow: 0 0 0 1px oklch(0.74 0.15 150 / 22%);
+  }
+
+  .text-glow {
+    text-shadow: 0 0 18px oklch(0.74 0.15 150 / 26%);
+  }
+
+  .glass {
+    background: oklch(0.2 0.012 152 / 68%);
+    backdrop-filter: blur(14px);
+    -webkit-backdrop-filter: blur(14px);
+  }
+
+  .border-glow {
+    border-color: oklch(0.74 0.15 150 / 32%);
+  }
+}
