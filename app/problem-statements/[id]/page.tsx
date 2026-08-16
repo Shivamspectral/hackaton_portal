@@ -22,11 +22,7 @@ import { Reveal } from '@/components/site/reveal'
 import { Badge } from '@/components/ui/badge'
 import { getProblemStatement, getProblemStatements } from '@/lib/api'
 import { EVENT } from '@/lib/config'
-
-export async function generateStaticParams() {
-  const problems = await getProblemStatements()
-  return problems.map((ps) => ({ id: ps.id }))
-}
+export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({
   params,
