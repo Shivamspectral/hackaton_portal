@@ -28,7 +28,7 @@ export function Hero() {
       {/* Background visual */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <Image
-          src="/hero-visual.png"
+          src="/hero-visual.jpg"
           alt=""
           fill
           priority
