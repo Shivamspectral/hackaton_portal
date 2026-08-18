@@ -98,3 +98,28 @@ export async function joinTeam(formData: FormData): Promise<ActionResult> {
   revalidatePath('/dashboard/team')
   return { ok: true }
 }
+
+export async function selectProblemStatement(psId: string): Promise<ActionResult> {
+  const user = await getCurrentUser()
+  if (!user) return { ok: false, error: 'Not signed in.' }
+  if (!user.teamId) return { ok: false, error: 'You need to be on a team first.' }
+
+  const supabase = await createRequiredClient()
+
+  const { error } = await supabase
+    .from('teams')
+    .update({ selected_ps_id: psId })
+    .eq('id', user.teamId)
+    .is('selected_ps_id', null) // extra guard against a race; the DB trigger is the real lock
+
+  if (error) {
+    if (error.message.includes('already selected')) {
+      return { ok: false, error: 'Your team already has a problem statement selected.' }
+    }
+    return { ok: false, error: error.message }
+  }
+
+  revalidatePath('/dashboard/team')
+  revalidatePath('/problem-statements')
+  return { ok: true }
+}

@@ -20,7 +20,8 @@ import { PSSelectCta } from '@/components/features/ps-select-cta'
 import { PageShell } from '@/components/site/page-shell'
 import { Reveal } from '@/components/site/reveal'
 import { Badge } from '@/components/ui/badge'
-import { getProblemStatement, getProblemStatements } from '@/lib/api'
+import { getProblemStatement, getProblemStatements, getTeam } from '@/lib/api'
+import { getCurrentUser } from '@/lib/supabase/auth'
 import { EVENT } from '@/lib/config'
 export const dynamic = 'force-dynamic'
 
@@ -81,6 +82,15 @@ export default async function ProblemStatementDetailPage({
   const { id } = await params
   const ps = await getProblemStatement(id)
   if (!ps) notFound()
+
+  // If the signed-in user's team already has a PS selected, pass its psId
+  // down so the button reflects that instead of showing "Select" everywhere.
+  const user = await getCurrentUser()
+  let teamSelectedPsId: string | null = null
+  if (user?.teamId) {
+    const team = await getTeam()
+    teamSelectedPsId = team.selectedProblem?.psId ?? null
+  }
 
   const facts = [
     { icon: Layers, label: 'Category', value: ps.category },
@@ -193,7 +203,7 @@ export default async function ProblemStatementDetailPage({
                 PS selection closes on the timeline.
               </p>
               <div className="mt-5">
-                <PSSelectCta ps={ps} />
+                <PSSelectCta ps={ps} teamSelectedPsId={teamSelectedPsId} />
               </div>
 
               <dl className="mt-6 flex flex-col gap-4 border-t border-border pt-6">
