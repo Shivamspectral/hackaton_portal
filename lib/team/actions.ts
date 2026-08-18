@@ -88,9 +88,9 @@ export async function joinTeam(formData: FormData): Promise<ActionResult> {
     .eq('id', user.id)
 
   if (updateError) {
-    // Trigger raises this exact message when the team is at 4 members.
+    // Trigger raises this exact message when the team is at 6 members.
     if (updateError.message.includes('already full')) {
-      return { ok: false, error: 'That team already has 4 members.' }
+      return { ok: false, error: 'That team already has 6 members.' }
     }
     return { ok: false, error: updateError.message }
   }
