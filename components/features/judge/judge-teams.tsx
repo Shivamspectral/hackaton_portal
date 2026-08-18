@@ -1,6 +1,6 @@
 'use client'
 
-import { CheckCircle2, ClipboardList } from 'lucide-react'
+import { CheckCircle2, ClipboardList, ExternalLink, Loader2 } from 'lucide-react'
 import { useState } from 'react'
 
 import { ScoringForm } from '@/components/features/judge/scoring-form'
@@ -8,12 +8,36 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import type { JudgeTeamRow } from '@/lib/judge/data'
+import { getSubmissionDownloadUrl } from '@/lib/submissions-client'
 
 export function JudgeTeams({ teams }: { teams: JudgeTeamRow[] }) {
   const [active, setActive] = useState<JudgeTeamRow | null>(null)
+  const [openingId, setOpeningId] = useState<string | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  async function handleViewDeck(team: JudgeTeamRow) {
+    if (!team.submissionFileUrl) return
+    setError(null)
+    setOpeningId(team.id)
+    const url = await getSubmissionDownloadUrl(team.submissionFileUrl)
+    setOpeningId(null)
+    if (!url) {
+      setError(`Could not open ${team.teamCode}'s deck. Please try again.`)
+      return
+    }
+    window.open(url, '_blank', 'noopener,noreferrer')
+  }
 
   return (
     <>
+      {error && (
+        <p
+          role="alert"
+          className="mb-4 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 font-mono text-xs text-destructive"
+        >
+          {error}
+        </p>
+      )}
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {teams.map((team) => {
           const scored = !!team.myEvaluation
@@ -44,9 +68,26 @@ export function JudgeTeams({ teams }: { teams: JudgeTeamRow[] }) {
                 {team.selectedPs?.title ?? 'No problem statement selected'}
               </p>
 
+              {team.submissionFileUrl && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="mt-4"
+                  disabled={openingId === team.id}
+                  onClick={() => handleViewDeck(team)}
+                >
+                  {openingId === team.id ? (
+                    <Loader2 className="size-3.5 animate-spin" />
+                  ) : (
+                    <ExternalLink className="size-3.5" />
+                  )}
+                  View deck
+                </Button>
+              )}
+
               <Button
                 variant={scored ? 'outline' : 'default'}
-                className="mt-4"
+                className={team.submissionFileUrl ? 'mt-2' : 'mt-4'}
                 onClick={() => setActive(team)}
               >
                 <ClipboardList className="size-4" />

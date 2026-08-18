@@ -511,6 +511,7 @@ export const currentTeam: Team = {
   },
   submission: {
     fileName: '',
+    fileUrl: '',
     status: 'none',
     timestamp: null,
   },

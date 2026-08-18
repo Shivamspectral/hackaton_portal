@@ -134,6 +134,7 @@ export function mapTeam(
   const submissionRow = team.submission?.[0]
   const submission = {
     fileName: submissionRow?.file_name ?? '',
+    fileUrl: submissionRow?.file_url ?? '',
     status: (submissionRow?.status as 'submitted' | 'none') ?? 'none',
     timestamp: submissionRow?.submitted_at ?? null,
   }

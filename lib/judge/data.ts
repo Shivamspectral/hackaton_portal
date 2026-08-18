@@ -25,6 +25,9 @@ export interface JudgeTeamRow {
   teamName: string
   selectedPs: { psId: string; title: string; category: Category } | null
   submissionStatus: 'submitted' | 'none'
+  submissionFileName: string | null
+  /** Storage object path (bucket-relative) — null when nothing's submitted. */
+  submissionFileUrl: string | null
   myEvaluation: JudgeEvaluation | null
 }
 
@@ -33,7 +36,7 @@ interface RawJudgeTeam {
   team_code: string
   name: string
   selected_ps: { ps_id: string; title: string; category: string } | null
-  submission: { status: string }[] | null
+  submission: { status: string; file_name: string | null; file_url: string | null }[] | null
 }
 
 interface RawEvaluation {
@@ -60,7 +63,7 @@ export async function getJudgeTeams(): Promise<JudgeTeamRow[]> {
     .select(
       `id, team_code, name,
        selected_ps:problem_statements!teams_selected_ps_id_fkey ( ps_id, title, category ),
-       submission:submissions ( status )`,
+       submission:submissions ( status, file_name, file_url )`,
     )
     .order('team_code', { ascending: true })
 
@@ -93,6 +96,8 @@ export async function getJudgeTeams(): Promise<JudgeTeamRow[]> {
           }
         : null,
       submissionStatus: (t.submission?.[0]?.status as 'submitted' | 'none') ?? 'none',
+      submissionFileName: t.submission?.[0]?.file_name ?? null,
+      submissionFileUrl: t.submission?.[0]?.file_url ?? null,
       myEvaluation: evaluation
         ? {
             innovation: evaluation.innovation,

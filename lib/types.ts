@@ -72,6 +72,8 @@ export interface TeamMember {
 
 export interface Submission {
   fileName: string
+  /** Storage object path (bucket-relative), used to mint a signed download URL. Empty when nothing's submitted. */
+  fileUrl: string
   status: 'submitted' | 'none'
   timestamp: string | null
 }

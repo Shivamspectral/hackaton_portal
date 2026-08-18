@@ -1,23 +1,24 @@
 'use client'
 
-import { CheckCircle2, FileText, Loader2, RefreshCw } from 'lucide-react'
+import { CheckCircle2, ExternalLink, FileText, Loader2, RefreshCw } from 'lucide-react'
 import { useState } from 'react'
 
 import { FileUpload } from '@/components/features/file-upload'
 import { Button } from '@/components/ui/button'
-import { uploadSubmission } from '@/lib/submissions-client'
+import { getSubmissionDownloadUrl, uploadSubmission } from '@/lib/submissions-client'
 import type { Submission } from '@/lib/types'
 
 type State =
   | { kind: 'empty' }
   | { kind: 'uploading'; fileName: string }
-  | { kind: 'submitted'; fileName: string; timestamp: string }
+  | { kind: 'submitted'; fileName: string; fileUrl: string; timestamp: string }
 
 function initialState(submission: Submission): State {
   if (submission.status === 'submitted' && submission.fileName) {
     return {
       kind: 'submitted',
       fileName: submission.fileName,
+      fileUrl: submission.fileUrl,
       timestamp: submission.timestamp ?? new Date().toISOString(),
     }
   }
@@ -40,6 +41,7 @@ export function SubmissionPanel({
 }) {
   const [state, setState] = useState<State>(() => initialState(submission))
   const [error, setError] = useState<string | null>(null)
+  const [opening, setOpening] = useState(false)
 
   async function handleFile(file: File) {
     setError(null)
@@ -49,12 +51,26 @@ export function SubmissionPanel({
       setState({
         kind: 'submitted',
         fileName: res.fileName,
+        fileUrl: res.fileUrl,
         timestamp: res.timestamp,
       })
     } else {
       setError(res.error ?? 'Upload failed. Please try again.')
       setState({ kind: 'empty' })
     }
+  }
+
+  async function handleView(fileUrl: string) {
+    if (!fileUrl) return
+    setError(null)
+    setOpening(true)
+    const url = await getSubmissionDownloadUrl(fileUrl)
+    setOpening(false)
+    if (!url) {
+      setError('Could not open your deck. Please try again.')
+      return
+    }
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   if (state.kind === 'uploading') {
@@ -93,7 +109,22 @@ export function SubmissionPanel({
             </p>
           </div>
         </div>
-        <div className="mt-5 border-t border-chart-3/20 pt-4">
+        <div className="mt-5 flex flex-wrap gap-2 border-t border-chart-3/20 pt-4">
+          {state.fileUrl && (
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={opening}
+              onClick={() => handleView(state.fileUrl)}
+            >
+              {opening ? (
+                <Loader2 className="size-3.5 animate-spin" />
+              ) : (
+                <ExternalLink className="size-3.5" />
+              )}
+              View your deck
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
@@ -103,6 +134,14 @@ export function SubmissionPanel({
             Replace submission
           </Button>
         </div>
+        {error && (
+          <p
+            role="alert"
+            className="mt-3 rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 font-mono text-xs text-destructive"
+          >
+            {error}
+          </p>
+        )}
       </div>
     )
   }

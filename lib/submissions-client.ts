@@ -13,6 +13,8 @@ const BUCKET = 'submissions'
 export interface UploadSubmissionResult {
   ok: boolean
   fileName: string
+  /** Storage object path (bucket-relative) — empty in the mock/no-Supabase path. */
+  fileUrl: string
   timestamp: string
   error?: string
 }
@@ -35,7 +37,7 @@ export async function uploadSubmission(
   // so the demo/mock experience still works end-to-end.
   if (!supabase || !teamDbId) {
     return delay(
-      { ok: true, fileName: file.name, timestamp: new Date().toISOString() },
+      { ok: true, fileName: file.name, fileUrl: '', timestamp: new Date().toISOString() },
       900,
     )
   }
@@ -50,6 +52,7 @@ export async function uploadSubmission(
     return {
       ok: false,
       fileName: file.name,
+      fileUrl: '',
       timestamp: new Date().toISOString(),
       error: uploadError.message,
     }
@@ -69,10 +72,10 @@ export async function uploadSubmission(
   )
 
   if (dbError) {
-    return { ok: false, fileName: file.name, timestamp, error: dbError.message }
+    return { ok: false, fileName: file.name, fileUrl: '', timestamp, error: dbError.message }
   }
 
-  return { ok: true, fileName: file.name, timestamp }
+  return { ok: true, fileName: file.name, fileUrl: path, timestamp }
 }
 
 // Generates a short-lived signed URL to view/download a stored submission.

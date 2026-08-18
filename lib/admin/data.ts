@@ -71,6 +71,9 @@ export interface AdminTeamRow {
   memberCount: number
   selectedPs: { id: string; psId: string; title: string } | null
   submissionStatus: 'submitted' | 'none'
+  submissionFileName: string | null
+  /** Storage object path (bucket-relative) — null when nothing's submitted. */
+  submissionFileUrl: string | null
 }
 
 interface RawAdminTeam {
@@ -80,7 +83,7 @@ interface RawAdminTeam {
   status: string
   leader_id: string | null
   selected_ps: { id: string; ps_id: string; title: string } | null
-  submission: { status: string }[] | null
+  submission: { status: string; file_name: string | null; file_url: string | null }[] | null
 }
 
 // GET /api/admin/teams — team list with leader, member count, selected PS
@@ -93,7 +96,7 @@ export async function getAdminTeams(): Promise<AdminTeamRow[]> {
     .select(
       `id, team_code, name, status, leader_id,
        selected_ps:problem_statements!teams_selected_ps_id_fkey ( id, ps_id, title ),
-       submission:submissions ( status )`,
+       submission:submissions ( status, file_name, file_url )`,
     )
     .order('team_code', { ascending: true })
 
@@ -121,6 +124,8 @@ export async function getAdminTeams(): Promise<AdminTeamRow[]> {
         ? { id: t.selected_ps.id, psId: t.selected_ps.ps_id, title: t.selected_ps.title }
         : null,
       submissionStatus: (t.submission?.[0]?.status as 'submitted' | 'none') ?? 'none',
+      submissionFileName: t.submission?.[0]?.file_name ?? null,
+      submissionFileUrl: t.submission?.[0]?.file_url ?? null,
     }
   })
 }

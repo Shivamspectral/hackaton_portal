@@ -5,16 +5,25 @@ import { useId, useRef, useState } from 'react'
 
 import { cn } from '@/lib/utils'
 
+// Single source of truth for the cap — bump this if the limit ever changes.
+export const MAX_UPLOAD_BYTES = 30 * 1024 * 1024 // 30MB
+
+function formatMB(bytes: number) {
+  return `${(bytes / (1024 * 1024)).toFixed(1)}MB`
+}
+
 export function FileUpload({
   onFileSelected,
   accept = '.ppt,.pptx',
   disabled = false,
-  hint = 'PPT or PPTX · up to 25MB',
+  hint = 'PPT or PPTX · up to 30MB',
+  maxBytes = MAX_UPLOAD_BYTES,
 }: {
   onFileSelected: (file: File) => void
   accept?: string
   disabled?: boolean
   hint?: string
+  maxBytes?: number
 }) {
   const inputId = useId()
   const inputRef = useRef<HTMLInputElement>(null)
@@ -28,6 +37,12 @@ export function FileUpload({
     const ok = extensions.some((ext) => file.name.toLowerCase().endsWith(ext))
     if (!ok) {
       setError(`Unsupported file type. Accepted: ${extensions.join(', ')}`)
+      return
+    }
+    if (file.size > maxBytes) {
+      setError(
+        `File is too large (${formatMB(file.size)}). Max size is ${formatMB(maxBytes)}.`,
+      )
       return
     }
     setError(null)

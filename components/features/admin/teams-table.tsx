@@ -1,6 +1,6 @@
 'use client'
 
-import { Loader2, Trash2 } from 'lucide-react'
+import { ExternalLink, Loader2, Trash2 } from 'lucide-react'
 import { useState, useTransition } from 'react'
 
 import { Badge } from '@/components/ui/badge'
@@ -9,6 +9,7 @@ import { Select } from '@/components/ui/select'
 import type { ActionResult } from '@/lib/admin/actions'
 import { assignTeamProblemStatement, deleteTeam, updateTeamStatus } from '@/lib/admin/actions'
 import type { AdminTeamRow } from '@/lib/admin/data'
+import { getSubmissionDownloadUrl } from '@/lib/submissions-client'
 
 const STATUSES = ['Active', 'Qualified', 'Finalist', 'Eliminated'] as const
 
@@ -22,6 +23,7 @@ export function TeamsTable({
   const [pending, startTransition] = useTransition()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
+  const [openingId, setOpeningId] = useState<string | null>(null)
 
   function run(id: string, task: () => Promise<ActionResult>) {
     setError(null)
@@ -37,6 +39,19 @@ export function TeamsTable({
     if (!window.confirm(`Delete team ${team.teamCode} — ${team.teamName}? This can't be undone.`))
       return
     run(team.id, () => deleteTeam(team.id))
+  }
+
+  async function handleViewDeck(team: AdminTeamRow) {
+    if (!team.submissionFileUrl) return
+    setError(null)
+    setOpeningId(team.id)
+    const url = await getSubmissionDownloadUrl(team.submissionFileUrl)
+    setOpeningId(null)
+    if (!url) {
+      setError(`Could not open ${team.teamCode}'s deck. Please try again.`)
+      return
+    }
+    window.open(url, '_blank', 'noopener,noreferrer')
   }
 
   return (
@@ -94,9 +109,26 @@ export function TeamsTable({
                     </Select>
                   </td>
                   <td className="px-4 py-3 sm:px-6">
-                    <Badge variant={team.submissionStatus === 'submitted' ? 'success' : 'muted'}>
-                      {team.submissionStatus === 'submitted' ? 'Submitted' : 'Pending'}
-                    </Badge>
+                    <div className="flex items-center gap-2">
+                      <Badge variant={team.submissionStatus === 'submitted' ? 'success' : 'muted'}>
+                        {team.submissionStatus === 'submitted' ? 'Submitted' : 'Pending'}
+                      </Badge>
+                      {team.submissionFileUrl && (
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          aria-label={`View ${team.teamCode}'s deck`}
+                          disabled={openingId === team.id}
+                          onClick={() => handleViewDeck(team)}
+                        >
+                          {openingId === team.id ? (
+                            <Loader2 className="size-3.5 animate-spin" />
+                          ) : (
+                            <ExternalLink className="size-3.5" />
+                          )}
+                        </Button>
+                      )}
+                    </div>
                   </td>
                   <td className="px-4 py-3 sm:px-6">
                     <Select
