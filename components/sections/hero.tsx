@@ -24,18 +24,18 @@ const item = {
 
 export function Hero() {
   return (
-    <section className="relative overflow-hidden">
+    <section className="relative isolate overflow-hidden">
       {/* Background visual */}
       <div className="pointer-events-none absolute inset-0 -z-10">
         <Image
-          src="/hero-visual.jpg"
+          src="/hero-visual-v2.jpg"
           alt=""
           fill
           priority
           sizes="100vw"
-          className="object-cover object-center opacity-45"
+          className="object-cover object-top opacity-70"
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/40 via-background/70 to-background" />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/20 via-background/50 to-background" />
       </div>
 
       <div className="mx-auto max-w-6xl px-4 pb-20 pt-24 sm:px-6 sm:pb-28 sm:pt-32">
@@ -65,9 +65,12 @@ export function Hero() {
             variants={item}
             className="mt-6 max-w-2xl text-base leading-relaxed text-muted-foreground text-pretty sm:text-lg"
           >
-            {EVENT.tagline}, where the sharpest student builders across campus
-            ship real solutions to real problems. Pick a challenge, form your team,
-            and race to the top of the leaderboard.
+            Siddhant College of Engineering&apos;s Internal Smart India Hackathon,
+            where the college&apos;s brightest student innovators come together
+            to solve real-world problem statements. Form your team, build
+            impactful solutions, and compete for the opportunity to represent
+            Siddhant College of Engineering at Smart India Hackathon (SIH)
+            at the national level.
           </motion.p>
 
           <motion.div
@@ -108,7 +111,7 @@ export function Hero() {
 
           <motion.div variants={item} className="mt-12">
             <p className="mb-4 font-mono text-xs uppercase tracking-widest text-muted-foreground">
-              Hacking begins in
+              Evaluation day in
             </p>
             <Countdown targetDate={EVENT.startDate} />
           </motion.div>

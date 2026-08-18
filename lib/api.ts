@@ -84,7 +84,7 @@ export async function getEventStats(): Promise<EventStat[]> {
         value: String(problemStatements.count ?? 0),
         hint: 'Across open tracks',
       },
-      { label: 'Prize Pool', value: '₹5L', hint: 'Cash & credits' },
+      { label: 'Reward', value: 'SIH Nomination', hint: 'Represent SCOE nationally' },
     ]
   } catch {
     return mockEventStats

@@ -11,7 +11,7 @@ export const eventStats: EventStat[] = [
   { label: 'Participants', value: '1,284', hint: 'Registered builders' },
   { label: 'Teams', value: '372', hint: 'From 96 colleges' },
   { label: 'Problem Statements', value: '24', hint: 'Across 9 tracks' },
-  { label: 'Prize Pool', value: '₹5L', hint: 'Cash & credits' },
+  { label: 'Reward', value: 'SIH Nomination', hint: 'Represent SCOE nationally' },
 ]
 
 export const announcements: Announcement[] = [

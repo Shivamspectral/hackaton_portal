@@ -18,7 +18,7 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: 'HyperStack — Siddhant College of Engineering Hackathon',
   description:
-    'BUILD. BREAK. INNOVATE. A 36-hour internal hackathon at Siddhant College of Engineering (SCOE). Browse problem statements, register your team, and compete for the top of the leaderboard.',
+    'BUILD. BREAK. INNOVATE. Siddhant College of Engineering\u2019s (SCOE) Internal Smart India Hackathon. Browse problem statements, register your team, and compete for a nomination to SIH Nationals.',
   generator: 'v0.app',
   keywords: [
     'hackathon',
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: 'HyperStack — Siddhant College of Engineering Hackathon',
     description:
-      'BUILD. BREAK. INNOVATE. A 36-hour internal hackathon at Siddhant College of Engineering.',
+      'BUILD. BREAK. INNOVATE. Siddhant College of Engineering\u2019s Internal Smart India Hackathon.',
     type: 'website',
   },
 }
