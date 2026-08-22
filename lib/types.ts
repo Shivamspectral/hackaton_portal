@@ -31,6 +31,10 @@ export interface ProblemStatement {
   difficulty: Difficulty
   status: PSStatus
   teamsSelected: number
+  /** True for a team-authored brief (not visible in the public browse list). */
+  isCustom: boolean
+  /** teams.id of the team that authored this brief — set only when isCustom. */
+  createdByTeamId: string | null
 }
 
 export interface Announcement {
@@ -85,6 +89,8 @@ export interface Team {
   dbId?: string
   teamName: string
   leader: string
+  /** profiles.id (uuid) of the leader — undefined on mock data. Used to gate the "Delete team" action to the actual leader instead of matching on display name. */
+  leaderId?: string
   members: TeamMember[]
   selectedProblem: {
     psId: string

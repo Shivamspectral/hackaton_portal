@@ -50,16 +50,31 @@ export async function getAdminOverview(): Promise<AdminOverview> {
 }
 
 // GET /api/admin/problem-statements — full list for the manage table.
+// Includes team-authored custom rows too (admins can see everything),
+// distinguished on the table by ProblemStatement.isCustom.
 export async function getAdminProblemStatements(): Promise<ProblemStatement[]> {
   const supabase = await createRequiredClient()
 
   const { data, error } = await supabase
     .from('problem_statements')
-    .select('*, teams(count)')
+    .select('*, teams!teams_selected_ps_id_fkey(count)')
     .order('ps_id', { ascending: true })
 
   if (error || !data) return []
   return (data as ProblemStatementRow[]).map(mapProblemStatement)
+}
+
+// GET /api/admin/ps-selection-lock — current state of the global switch.
+export async function getPsSelectionLocked(): Promise<boolean> {
+  const supabase = await createRequiredClient()
+  const { data, error } = await supabase
+    .from('event_settings')
+    .select('ps_selection_locked')
+    .eq('id', true)
+    .maybeSingle()
+
+  if (error || !data) return false
+  return !!data.ps_selection_locked
 }
 
 export interface AdminTeamRow {

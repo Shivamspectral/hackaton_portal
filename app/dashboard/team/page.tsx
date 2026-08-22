@@ -3,7 +3,11 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { AnnouncementCard } from '@/components/features/announcement-card'
+import { CustomPsForm } from '@/components/features/custom-ps-form'
+import { DeleteCustomPsButton } from '@/components/features/delete-custom-ps-button'
+import { DeleteTeamButton } from '@/components/features/delete-team-button'
 import { ProgressTracker } from '@/components/features/progress-tracker'
+import { PSSelectCta } from '@/components/features/ps-select-cta'
 import { SubmissionPanel } from '@/components/features/submission-panel'
 import { TeamSetupForm } from '@/components/features/team-setup-form'
 import { PageShell } from '@/components/site/page-shell'
@@ -11,9 +15,15 @@ import { Reveal } from '@/components/site/reveal'
 import { RequireAuth } from '@/components/site/require-auth'
 import { Badge } from '@/components/ui/badge'
 import { ButtonLink } from '@/components/ui/button-link'
-import { getAnnouncements, getTeam } from '@/lib/api'
+import {
+  getAnnouncements,
+  getPsSelectionLocked,
+  getTeam,
+  getTeamCustomProblemStatements,
+} from '@/lib/api'
 import { getCurrentUser } from '@/lib/supabase/auth'
 import { EVENT } from '@/lib/config'
+import { customPsLabel } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 
 export const metadata: Metadata = {
@@ -68,12 +78,17 @@ export default async function TeamDashboardPage() {
 
   const needsTeamSetup = user !== null && user.teamId === null
 
-  const [team, announcements] = await Promise.all([
+  const [team, announcements, selectionLocked] = await Promise.all([
     getTeam(),
     getAnnouncements(),
+    getPsSelectionLocked(),
   ])
+  const customProblemStatements = team.dbId
+    ? await getTeamCustomProblemStatements(team.dbId)
+    : []
 
   const relevant = announcements.slice(0, 3)
+  const isLeader = !!user && !!team.leaderId && user.id === team.leaderId
 
   if (needsTeamSetup) {
     return (
@@ -119,9 +134,12 @@ export default async function TeamDashboardPage() {
                   </span>
                 </div>
               </div>
-              <Badge variant="muted" className="w-fit font-mono">
-                {team.members.length} members
-              </Badge>
+              <div className="flex items-center gap-3">
+                <Badge variant="muted" className="w-fit font-mono">
+                  {team.members.length} members
+                </Badge>
+                {isLeader && <DeleteTeamButton teamName={team.teamName} />}
+              </div>
             </div>
           </Reveal>
 
@@ -155,15 +173,31 @@ export default async function TeamDashboardPage() {
                         <h3 className="mt-2 font-display text-lg font-semibold text-balance">
                           {team.selectedProblem.title}
                         </h3>
+                        {!selectionLocked && (
+                          <p className="mt-2 text-xs text-muted-foreground">
+                            You can still switch your pick — selection isn&apos;t locked yet.
+                          </p>
+                        )}
                       </div>
-                      <ButtonLink
-                        variant="outline"
-                        href={`/problem-statements/${team.selectedProblem.psId}`}
-                        className="shrink-0 hover:border-primary/40 hover:text-primary"
-                      >
-                        View brief
-                        <ArrowRight className="size-4" />
-                      </ButtonLink>
+                      <div className="flex shrink-0 flex-col gap-2 sm:flex-row">
+                        {!selectionLocked && (
+                          <ButtonLink
+                            variant="outline"
+                            href="/problem-statements"
+                            className="hover:border-primary/40 hover:text-primary"
+                          >
+                            Change
+                          </ButtonLink>
+                        )}
+                        <ButtonLink
+                          variant="outline"
+                          href={`/problem-statements/${team.selectedProblem.psId}`}
+                          className="hover:border-primary/40 hover:text-primary"
+                        >
+                          View brief
+                          <ArrowRight className="size-4" />
+                        </ButtonLink>
+                      </div>
                     </div>
                   ) : (
                     <div className="rounded-xl border border-dashed border-border bg-background/40 p-6 text-center">
@@ -176,6 +210,54 @@ export default async function TeamDashboardPage() {
                       </ButtonLink>
                     </div>
                   )}
+                </Panel>
+              </Reveal>
+
+              {/* Custom problem statements — private to this team */}
+              <Reveal>
+                <Panel title="Your Custom Problem Statements" icon={Layers}>
+                  <p className="-mt-1 mb-4 text-sm leading-relaxed text-muted-foreground">
+                    Don&apos;t see a brief that fits? Write your own — it&apos;s
+                    private to your team (plus judges and admins), and usable
+                    right away.
+                  </p>
+                  <div className="flex flex-col gap-4">
+                    {customProblemStatements.map((custom) => (
+                      <div
+                        key={custom.id}
+                        className="rounded-xl border border-border bg-background/40 p-4"
+                      >
+                        <div className="flex items-start justify-between gap-3">
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="font-mono text-xs font-semibold tracking-wider text-primary">
+                              {customPsLabel(custom.psId)}
+                            </span>
+                            <Badge variant="outline">Private</Badge>
+                          </div>
+                          <DeleteCustomPsButton
+                            psId={custom.id}
+                            label={customPsLabel(custom.psId)}
+                          />
+                        </div>
+                        <h4 className="mt-1.5 font-display text-sm font-semibold text-balance">
+                          {custom.title}
+                        </h4>
+                        {custom.shortDescription && (
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            {custom.shortDescription}
+                          </p>
+                        )}
+                        <div className="mt-3">
+                          <PSSelectCta
+                            ps={custom}
+                            teamSelectedPsId={team.selectedProblem?.psId ?? null}
+                            selectionLocked={selectionLocked}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    <CustomPsForm />
+                  </div>
                 </Panel>
               </Reveal>
 

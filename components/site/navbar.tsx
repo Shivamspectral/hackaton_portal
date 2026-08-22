@@ -7,6 +7,7 @@ import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
+import { DeleteAccountButton } from '@/components/features/delete-account-button'
 import { Button } from '@/components/ui/button'
 import { ButtonLink } from '@/components/ui/button-link'
 import { EVENT } from '@/lib/config'
@@ -129,6 +130,7 @@ export function Navbar() {
               >
                 <LogOut className="size-4" />
               </Button>
+              <DeleteAccountButton className="h-10 px-3 text-xs text-muted-foreground hover:text-destructive" />
             </>
           ) : (
             <ButtonLink
@@ -198,6 +200,7 @@ export function Navbar() {
                       <LogOut className="size-4" />
                       Log out
                     </Button>
+                    <DeleteAccountButton className="h-11 w-full text-sm text-muted-foreground hover:text-destructive" />
                   </div>
                 ) : (
                   <ButtonLink

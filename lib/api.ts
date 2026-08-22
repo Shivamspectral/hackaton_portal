@@ -99,7 +99,12 @@ export async function getProblemStatements(): Promise<ProblemStatement[]> {
   try {
     const { data, error } = await supabase
       .from('problem_statements')
-      .select('*, teams(count)')
+      .select('*, teams!teams_selected_ps_id_fkey(count)')
+      // Team-authored custom briefs never show up in the public browse
+      // list — RLS also hides other teams' custom rows, but this keeps
+      // even a team's own custom PS out of this particular listing so it
+      // only ever surfaces on their own dashboard.
+      .eq('is_custom', false)
       .order('ps_id', { ascending: true })
 
     if (error || !data) return mockProblemStatements
@@ -127,7 +132,7 @@ export async function getProblemStatement(
 
     const { data, error } = await supabase
       .from('problem_statements')
-      .select('*, teams(count)')
+      .select('*, teams!teams_selected_ps_id_fkey(count)')
       .or(filter)
       .maybeSingle()
 
@@ -191,5 +196,50 @@ export async function getTeam(): Promise<Team> {
     )
   } catch {
     return currentTeam
+  }
+}
+
+// GET /api/ps-selection-lock — whether admins have frozen PS switching.
+// Defaults to unlocked (teams may freely change their pick) when Supabase
+// isn't connected, matching the rest of the mock-data fallback behavior.
+export async function getPsSelectionLocked(): Promise<boolean> {
+  const supabase = await createClient()
+  if (!supabase) return delay(false)
+
+  try {
+    const { data, error } = await supabase
+      .from('event_settings')
+      .select('ps_selection_locked')
+      .eq('id', true)
+      .maybeSingle()
+
+    if (error || !data) return false
+    return !!data.ps_selection_locked
+  } catch {
+    return false
+  }
+}
+
+// GET /api/team/custom-problem-statements — the signed-in team's own
+// custom briefs (private: RLS only returns rows this team authored, plus
+// the query itself scopes to the current team's dbId as a backstop).
+export async function getTeamCustomProblemStatements(
+  teamDbId: string,
+): Promise<ProblemStatement[]> {
+  const supabase = await createClient()
+  if (!supabase) return delay([])
+
+  try {
+    const { data, error } = await supabase
+      .from('problem_statements')
+      .select('*, teams!teams_selected_ps_id_fkey(count)')
+      .eq('is_custom', true)
+      .eq('created_by_team_id', teamDbId)
+      .order('created_at', { ascending: false })
+
+    if (error || !data) return []
+    return (data as ProblemStatementRow[]).map(mapProblemStatement)
+  } catch {
+    return []
   }
 }

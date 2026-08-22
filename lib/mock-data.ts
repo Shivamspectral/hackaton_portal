@@ -128,6 +128,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Advanced',
     status: 'Filling Fast',
     teamsSelected: 14,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '2',
@@ -151,6 +153,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Intermediate',
     status: 'Open',
     teamsSelected: 8,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '3',
@@ -174,6 +178,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Advanced',
     status: 'Open',
     teamsSelected: 5,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '4',
@@ -193,6 +199,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Intermediate',
     status: 'Filling Fast',
     teamsSelected: 11,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '5',
@@ -212,6 +220,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Advanced',
     status: 'Open',
     teamsSelected: 6,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '6',
@@ -231,6 +241,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Intermediate',
     status: 'Open',
     teamsSelected: 4,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '7',
@@ -250,6 +262,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Advanced',
     status: 'Filling Fast',
     teamsSelected: 17,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '8',
@@ -269,6 +283,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Beginner',
     status: 'Open',
     teamsSelected: 3,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '9',
@@ -288,6 +304,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Advanced',
     status: 'Open',
     teamsSelected: 2,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '10',
@@ -311,6 +329,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Beginner',
     status: 'Open',
     teamsSelected: 7,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '11',
@@ -330,6 +350,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Intermediate',
     status: 'Open',
     teamsSelected: 5,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '12',
@@ -349,6 +371,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Advanced',
     status: 'Filling Fast',
     teamsSelected: 13,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '13',
@@ -368,6 +392,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Intermediate',
     status: 'Open',
     teamsSelected: 4,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '14',
@@ -387,6 +413,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Intermediate',
     status: 'Closed',
     teamsSelected: 20,
+    isCustom: false,
+    createdByTeamId: null,
   },
   {
     id: '15',
@@ -406,6 +434,8 @@ export const problemStatements: ProblemStatement[] = [
     difficulty: 'Beginner',
     status: 'Open',
     teamsSelected: 6,
+    isCustom: false,
+    createdByTeamId: null,
   },
 ]
 

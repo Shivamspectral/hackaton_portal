@@ -95,6 +95,30 @@ export async function deleteProblemStatement(id: string): Promise<ActionResult> 
 }
 
 // ---------------------------------------------------------------------------
+// Event settings
+// ---------------------------------------------------------------------------
+
+// Flips the global switch trg_lock_selected_ps (0007 migration) checks
+// before rejecting a team's re-selection. When true, teams are frozen on
+// whatever they've currently picked (same as the old always-on behavior);
+// when false, teams may switch freely.
+export async function setPsSelectionLocked(locked: boolean): Promise<ActionResult> {
+  await requireRole('admin')
+  const supabase = await createRequiredClient()
+
+  const { error } = await supabase
+    .from('event_settings')
+    .update({ ps_selection_locked: locked, updated_at: new Date().toISOString() })
+    .eq('id', true)
+
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath('/dashboard/admin/problem-statements')
+  revalidatePath('/problem-statements')
+  return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
 // Teams
 // ---------------------------------------------------------------------------
 

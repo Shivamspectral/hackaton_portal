@@ -99,6 +99,11 @@ export async function joinTeam(formData: FormData): Promise<ActionResult> {
   return { ok: true }
 }
 
+// Selects (or switches to) a problem statement for the caller's team.
+// Whether switching is actually allowed is decided entirely by
+// trg_lock_selected_ps / event_settings.ps_selection_locked (0007
+// migration) — this action no longer guards on "already selected" itself,
+// so a team can pick, then re-pick, freely until an admin flips the lock.
 export async function selectProblemStatement(psId: string): Promise<ActionResult> {
   const user = await getCurrentUser()
   if (!user) return { ok: false, error: 'Not signed in.' }
@@ -110,16 +115,144 @@ export async function selectProblemStatement(psId: string): Promise<ActionResult
     .from('teams')
     .update({ selected_ps_id: psId })
     .eq('id', user.teamId)
-    .is('selected_ps_id', null) // extra guard against a race; the DB trigger is the real lock
 
   if (error) {
-    if (error.message.includes('already selected')) {
-      return { ok: false, error: 'Your team already has a problem statement selected.' }
+    if (error.message.includes('locked')) {
+      return {
+        ok: false,
+        error: 'Problem statement selection is locked — contact an admin to change it.',
+      }
     }
     return { ok: false, error: error.message }
   }
 
   revalidatePath('/dashboard/team')
   revalidatePath('/problem-statements')
+  return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
+// Custom problem statements (team-authored, private to the team + staff)
+// ---------------------------------------------------------------------------
+
+// Creates a custom problem statement owned by the caller's team. Usable
+// immediately — no admin approval step. Visibility is enforced by RLS
+// (ps_select_public, 0007 migration): only this team, judges, and admins
+// can see it; it's also excluded from the public browse list at the query
+// layer (getProblemStatements in lib/api.ts).
+export interface CreatePsResult extends ActionResult {
+  /** The new row's id + ps_id, so the caller can e.g. immediately select it. */
+  problemStatement?: { id: string; psId: string }
+}
+
+export async function createCustomProblemStatement(
+  formData: FormData,
+): Promise<CreatePsResult> {
+  const user = await getCurrentUser()
+  if (!user) return { ok: false, error: 'Not signed in.' }
+  if (!user.teamId) return { ok: false, error: 'You need to be on a team first.' }
+
+  const title = String(formData.get('title') ?? '').trim()
+  const shortDescription = String(formData.get('shortDescription') ?? '').trim()
+  const description = String(formData.get('description') ?? '').trim()
+
+  if (!title) return { ok: false, error: 'Title is required.' }
+
+  const supabase = await createRequiredClient()
+
+  // Sequential per-team numbering: "Custom PS 1", "Custom PS 2", ... — the
+  // count is scoped to this team, so every team starts back at 1. ps_id
+  // still has a table-wide unique constraint, so the team's own uuid is
+  // folded in too (invisible to the user — they only ever see the label).
+  const { count } = await supabase
+    .from('problem_statements')
+    .select('id', { count: 'exact', head: true })
+    .eq('is_custom', true)
+    .eq('created_by_team_id', user.teamId)
+  const n = (count ?? 0) + 1
+  const psId = `CUSTOM-${user.teamId}-${n}`
+  const label = `Custom PS ${n}`
+
+  const { data, error } = await supabase
+    .from('problem_statements')
+    .insert({
+      ps_id: psId,
+      title: title || label,
+      short_description: shortDescription || label,
+      description: description || shortDescription || label,
+      is_custom: true,
+      created_by_team_id: user.teamId,
+      status: 'Open',
+    })
+    .select('id, ps_id')
+    .single()
+
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath('/dashboard/team')
+  return { ok: true, problemStatement: { id: data.id, psId: data.ps_id } }
+}
+
+// Deletes one of the caller's own custom problem statements. Scoped by
+// is_custom + created_by_team_id in the query itself as a backstop on top
+// of RLS (ps_delete_own_custom, 0007 migration) — a team can never delete
+// another team's custom PS or an admin-authored one. If the team currently
+// has this PS selected, teams.selected_ps_id is set to null automatically
+// (on delete set null, from 0001_schema.sql).
+export async function deleteCustomProblemStatement(psId: string): Promise<ActionResult> {
+  const user = await getCurrentUser()
+  if (!user) return { ok: false, error: 'Not signed in.' }
+  if (!user.teamId) return { ok: false, error: 'You need to be on a team first.' }
+
+  const supabase = await createRequiredClient()
+
+  const { error } = await supabase
+    .from('problem_statements')
+    .delete()
+    .eq('id', psId)
+    .eq('is_custom', true)
+    .eq('created_by_team_id', user.teamId)
+
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath('/dashboard/team')
+  return { ok: true }
+}
+
+// ---------------------------------------------------------------------------
+// Delete own team (leader only)
+// ---------------------------------------------------------------------------
+
+// Only the team's leader may delete it — re-checked here even though RLS
+// (teams_delete_leader, 0006_leader_deletes_team.sql) enforces the same rule,
+// same pattern as every other action in this codebase. Deleting the team row
+// cascades per 0001_schema.sql: members' profiles.team_id -> null (they're
+// bumped back to the create/join screen, not deleted), submissions and
+// evaluations for the team are removed.
+export async function deleteOwnTeam(): Promise<ActionResult> {
+  const user = await getCurrentUser()
+  if (!user) return { ok: false, error: 'Not signed in.' }
+  if (!user.teamId) return { ok: false, error: 'You are not on a team.' }
+
+  const supabase = await createRequiredClient()
+
+  const { data: team, error: findError } = await supabase
+    .from('teams')
+    .select('id, leader_id')
+    .eq('id', user.teamId)
+    .maybeSingle()
+
+  if (findError) return { ok: false, error: findError.message }
+  if (!team) return { ok: false, error: 'Team not found.' }
+  if (team.leader_id !== user.id) {
+    return { ok: false, error: 'Only the team leader can delete the team.' }
+  }
+
+  const { error } = await supabase.from('teams').delete().eq('id', team.id)
+  if (error) return { ok: false, error: error.message }
+
+  revalidatePath('/dashboard/team')
+  revalidatePath('/dashboard/admin/teams')
+  revalidatePath('/rankings')
   return { ok: true }
 }

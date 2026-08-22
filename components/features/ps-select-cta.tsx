@@ -12,20 +12,25 @@ import type { ProblemStatement } from '@/lib/types'
 export function PSSelectCta({
   ps,
   teamSelectedPsId = null,
+  selectionLocked = false,
 }: {
   ps: ProblemStatement
   teamSelectedPsId?: string | null
+  /** Global admin switch — when true, teams can't change an existing pick. */
+  selectionLocked?: boolean
 }) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const [pending, startTransition] = useTransition()
   const [error, setError] = useState<string | null>(null)
-  const [justSelected, setJustSelected] = useState(false)
+  // Local source of truth for "what's the team's pick right now" — seeded
+  // from the server prop, updated optimistically on a successful select so
+  // the UI reflects a switch immediately without waiting on the refresh.
+  const [currentSelectedPsId, setCurrentSelectedPsId] = useState(teamSelectedPsId)
 
   const closed = ps.status === 'Closed'
-  const isThisOne = teamSelectedPsId === ps.psId
-  const selected = justSelected || isThisOne
-  const lockedToOther = !!teamSelectedPsId && !isThisOne
+  const isThisOne = currentSelectedPsId === ps.psId
+  const lockedToOther = !!currentSelectedPsId && !isThisOne
 
   function confirm() {
     setError(null)
@@ -35,7 +40,7 @@ export function PSSelectCta({
         setError(result.error ?? 'Something went wrong.')
         return
       }
-      setJustSelected(true)
+      setCurrentSelectedPsId(ps.psId)
       setOpen(false)
       router.refresh()
     })
@@ -43,12 +48,24 @@ export function PSSelectCta({
 
   return (
     <>
-      {selected ? (
-        <div className="flex items-center gap-2 rounded-xl border border-chart-3/40 bg-chart-3/10 px-4 py-3 text-sm font-medium text-chart-3">
-          <CheckCircle2 className="size-5" />
-          Selected — this brief is now on your team dashboard.
+      {isThisOne ? (
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-2 rounded-xl border border-chart-3/40 bg-chart-3/10 px-4 py-3 text-sm font-medium text-chart-3">
+            <CheckCircle2 className="size-5" />
+            Selected — this brief is now on your team dashboard.
+          </div>
+          {!selectionLocked && !closed && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => router.push('/problem-statements')}
+              className="w-fit"
+            >
+              Change problem statement
+            </Button>
+          )}
         </div>
-      ) : lockedToOther ? (
+      ) : lockedToOther && selectionLocked ? (
         <div className="flex items-center gap-2 rounded-xl border border-border bg-card/60 px-4 py-3 text-sm font-medium text-muted-foreground">
           <Lock className="size-4" />
           Your team already selected {teamSelectedPsId} — contact an admin to change it.
@@ -65,6 +82,8 @@ export function PSSelectCta({
               <Lock className="size-4" />
               Selection Closed
             </>
+          ) : lockedToOther ? (
+            `Switch from ${teamSelectedPsId}`
           ) : (
             'Select this Problem Statement'
           )}
@@ -78,8 +97,14 @@ export function PSSelectCta({
       <Modal
         open={open}
         onOpenChange={setOpen}
-        title="Confirm your problem statement"
-        description="Once selected, this is final — contact an admin if you need to change it later."
+        title={lockedToOther ? 'Switch your problem statement?' : 'Confirm your problem statement'}
+        description={
+          selectionLocked
+            ? 'Once selected, this is final — contact an admin if you need to change it later.'
+            : lockedToOther
+              ? `This will replace ${teamSelectedPsId} as your team's pick. You can switch again anytime, unless an admin locks selection.`
+              : 'You can switch to a different brief anytime, unless an admin locks selection.'
+        }
         footer={
           <>
             <Button variant="outline" onClick={() => setOpen(false)}>
@@ -89,8 +114,10 @@ export function PSSelectCta({
               {pending ? (
                 <>
                   <Loader2 className="size-4 animate-spin" />
-                  Locking in…
+                  {lockedToOther ? 'Switching…' : 'Locking in…'}
                 </>
+              ) : lockedToOther ? (
+                'Confirm switch'
               ) : (
                 'Confirm selection'
               )}

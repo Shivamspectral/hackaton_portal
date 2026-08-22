@@ -62,7 +62,14 @@ export function PsTable({
                   className="border-b border-border/60 transition-colors last:border-0 hover:bg-muted/30"
                 >
                   <td className="px-4 py-3 font-mono text-xs text-primary sm:px-6">{ps.psId}</td>
-                  <td className="max-w-xs truncate px-4 py-3 font-medium sm:px-6">{ps.title}</td>
+                  <td className="max-w-xs truncate px-4 py-3 font-medium sm:px-6">
+                    {ps.title}
+                    {ps.isCustom && (
+                      <Badge variant="outline" className="ml-2 align-middle text-[10px]">
+                        Custom
+                      </Badge>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-muted-foreground sm:px-6">{ps.category}</td>
                   <td className="px-4 py-3 sm:px-6">
                     <Badge variant={statusVariant(ps.status)}>{ps.status}</Badge>

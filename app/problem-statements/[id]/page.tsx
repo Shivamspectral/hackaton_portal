@@ -20,7 +20,7 @@ import { PSSelectCta } from '@/components/features/ps-select-cta'
 import { PageShell } from '@/components/site/page-shell'
 import { Reveal } from '@/components/site/reveal'
 import { Badge } from '@/components/ui/badge'
-import { getProblemStatement, getProblemStatements, getTeam } from '@/lib/api'
+import { getProblemStatement, getProblemStatements, getPsSelectionLocked, getTeam } from '@/lib/api'
 import { getCurrentUser } from '@/lib/supabase/auth'
 import { EVENT } from '@/lib/config'
 export const dynamic = 'force-dynamic'
@@ -91,6 +91,7 @@ export default async function ProblemStatementDetailPage({
     const team = await getTeam()
     teamSelectedPsId = team.selectedProblem?.psId ?? null
   }
+  const selectionLocked = await getPsSelectionLocked()
 
   const facts = [
     { icon: Layers, label: 'Category', value: ps.category },
@@ -199,11 +200,16 @@ export default async function ProblemStatementDetailPage({
                 <span className="tracking-widest uppercase">selection</span>
               </div>
               <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
-                Lock this brief in for your team. You can change your pick until
-                PS selection closes on the timeline.
+                {selectionLocked
+                  ? 'Lock this brief in for your team. Selection is currently frozen by an admin.'
+                  : 'Lock this brief in for your team. You can switch your pick anytime until an admin locks selection.'}
               </p>
               <div className="mt-5">
-                <PSSelectCta ps={ps} teamSelectedPsId={teamSelectedPsId} />
+                <PSSelectCta
+                  ps={ps}
+                  teamSelectedPsId={teamSelectedPsId}
+                  selectionLocked={selectionLocked}
+                />
               </div>
 
               <dl className="mt-6 flex flex-col gap-4 border-t border-border pt-6">

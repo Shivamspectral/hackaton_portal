@@ -31,6 +31,8 @@ export interface ProblemStatementRow {
   difficulty: string
   status: string
   created_at?: string
+  is_custom?: boolean | null
+  created_by_team_id?: string | null
   // Present when the query embeds the reverse `teams` relation as a count,
   // e.g. `.select('*, teams(count)')`.
   teams?: { count: number }[] | null
@@ -52,6 +54,8 @@ export function mapProblemStatement(row: ProblemStatementRow): ProblemStatement 
     difficulty: row.difficulty as Difficulty,
     status: row.status as PSStatus,
     teamsSelected: row.teams?.[0]?.count ?? 0,
+    isCustom: row.is_custom ?? false,
+    createdByTeamId: row.created_by_team_id ?? null,
   }
 }
 
@@ -148,6 +152,7 @@ export function mapTeam(
     dbId: team.id,
     teamName: team.name,
     leader: leaderProfile?.full_name?.trim() || leaderProfile?.email || 'Unassigned',
+    leaderId: team.leader_id ?? undefined,
     members,
     selectedProblem: team.selected_ps
       ? {
