@@ -112,7 +112,7 @@ export interface TeamRow {
     file_url: string | null
     status: string
     submitted_at: string | null
-  }[] | null
+  } | null
 }
 
 function memberLabel(profile: TeamProfileRow, isLeader: boolean): TeamMember {
@@ -135,7 +135,7 @@ export function mapTeam(
       ? [memberLabel(leaderProfile, true)]
       : []
 
-  const submissionRow = team.submission?.[0]
+  const submissionRow = team.submission
   const submission = {
     fileName: submissionRow?.file_name ?? '',
     fileUrl: submissionRow?.file_url ?? '',

@@ -98,7 +98,7 @@ interface RawAdminTeam {
   status: string
   leader_id: string | null
   selected_ps: { id: string; ps_id: string; title: string } | null
-  submission: { status: string; file_name: string | null; file_url: string | null }[] | null
+  submission: { status: string; file_name: string | null; file_url: string | null } | null
 }
 
 // GET /api/admin/teams — team list with leader, member count, selected PS
@@ -138,9 +138,9 @@ export async function getAdminTeams(): Promise<AdminTeamRow[]> {
       selectedPs: t.selected_ps
         ? { id: t.selected_ps.id, psId: t.selected_ps.ps_id, title: t.selected_ps.title }
         : null,
-      submissionStatus: (t.submission?.[0]?.status as 'submitted' | 'none') ?? 'none',
-      submissionFileName: t.submission?.[0]?.file_name ?? null,
-      submissionFileUrl: t.submission?.[0]?.file_url ?? null,
+      submissionStatus: (t.submission?.status as 'submitted' | 'none') ?? 'none',
+      submissionFileName: t.submission?.file_name ?? null,
+      submissionFileUrl: t.submission?.file_url ?? null,
     }
   })
 }
